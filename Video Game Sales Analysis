@@ -1,0 +1,103 @@
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+
+
+def main():
+    df_vg = pd.read_csv('vgsales.csv')
+    df_vg = df_vg.dropna()
+
+    # finding most popular genre for each region by isolating each region in a df and sorting by sales
+    # assuming popularity equates to the most sales
+    df_pop = df_vg.groupby('Genre').sum()
+    df_na = df_pop['NA_Sales'].sort_values(ascending=False)
+    df_eu = df_pop['EU_Sales'].sort_values(ascending=False)
+    df_jp = df_pop['JP_Sales'].sort_values(ascending=False)
+    df_other = df_pop['Other_Sales'].sort_values(ascending=False)
+
+    """
+    print(df_na)
+    print(df_eu)
+    print(df_jp)
+    print(df_other)
+    """
+
+    # print(df_vg)
+
+    """
+    From this, I've deduced that the most popular video game genres in each region are as follows: 
+    - NA: Action 
+    - EU: Action 
+    - JP: Role-Playing
+    - Other: Action
+    """
+
+    # Creating a linear regression with Year as the dependent and regional sales as the target
+    from sklearn.linear_model import LinearRegression
+
+    df_notjp = df_vg[df_vg['Genre'] == 'Action']
+    df_linreg_not_jp = df_notjp.groupby('Year').sum()
+
+    df_jp = df_vg[df_vg['Genre'] == 'Role-Playing']
+    df_linreg_jp = df_jp.groupby('Year').sum()
+
+    fig, ax = plt.subplots(2, 2)
+
+    # First, North America
+    X_notjp = df_linreg_not_jp.index.values.reshape(-1, 1)
+    y_na = df_linreg_not_jp['NA_Sales']
+    model_na = LinearRegression()
+    model_na.fit(X_notjp, y_na)
+    y_na_pred = model_na.predict(X_notjp)
+
+    ax[0, 0].set_title('Action Sales in NA')
+    ax[0, 0].set_xlabel('Year')
+    ax[0, 0].set_ylabel('Sales ($millions USD)')
+    ax[0, 0].scatter(X_notjp, y_na, color='blue')
+    ax[0, 0].plot(X_notjp, y_na_pred, color='orange')
+
+    # Next, Europe
+    y_eu = df_linreg_not_jp['EU_Sales']
+    model_eu = LinearRegression()
+    model_eu.fit(X_notjp, y_eu)
+    y_eu_pred = model_eu.predict(X_notjp)
+
+    ax[0, 1].set_title('Action Sales in EU')
+    ax[0, 1].set_xlabel('Year')
+    ax[0, 1].set_ylabel('Sales ($millions USD)')
+    ax[0, 1].scatter(X_notjp, y_eu, color='blue')
+    ax[0, 1].plot(X_notjp, y_eu_pred, color='orange')
+
+    # Next, Japan
+    X_jp = df_linreg_jp.index.values.reshape(-1, 1)
+    y_jp = df_linreg_jp['JP_Sales']
+    model_jp = LinearRegression()
+    model_jp.fit(X_jp, y_jp)
+    y_jp_pred = model_jp.predict(X_jp)
+
+    ax[1, 0].set_title('Role-Playing Sales in JP')
+    ax[1, 0].set_xlabel('Year')
+    ax[1, 0].set_ylabel('Sales ($millions USD)')
+    ax[1, 0].scatter(X_jp, y_jp, color='blue')
+    ax[1, 0].plot(X_jp, y_jp_pred, color='orange')
+
+    # Finally, Other
+    y_other = df_linreg_not_jp['Other_Sales']
+    model_other = LinearRegression()
+    model_other.fit(X_notjp, y_other)
+    y_other_pred = model_other.predict(X_notjp)
+
+    ax[1, 1].set_title('Action Sales in Other')
+    ax[1, 1].set_xlabel('Year')
+    ax[1, 1].set_ylabel('Sales ($millions USD)')
+    ax[1, 1].scatter(X_notjp, y_other, color='blue')
+    ax[1, 1].plot(X_notjp, y_other_pred, color='orange')
+
+    fig.suptitle('Regional video game sales: linear regression for most popular genre')
+    fig.tight_layout(rect=[0, 0.03, 1, 0.95])
+    fig.show()
+    fig.savefig('Extra Credit.png')
+
+
+if __name__ == '__main__':
+    main()
